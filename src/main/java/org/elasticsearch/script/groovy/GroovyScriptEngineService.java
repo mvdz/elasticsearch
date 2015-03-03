@@ -227,6 +227,21 @@ public class GroovyScriptEngineService extends AbstractComponent implements Scri
         private final ESLogger logger;
         private Scorer scorer;
 
+        public GroovyScript createNewInstance() {
+            try {
+                SearchLookup newLookup = lookup.createNewInstance();
+                Map<String, Object> newVariables = new HashMap<>(variables);
+                newVariables.putAll(newLookup.asMap());
+                Script newScript = script.getClass().newInstance();
+                Binding binding = new Binding();
+                binding.getVariables().putAll(newVariables);
+                newScript.setBinding(binding);
+                return new GroovyScript(newScript, newLookup, logger);
+            } catch (Exception e) {
+                throw new ScriptException("failed to duplicate script", e);
+            }
+        }
+
         public GroovyScript(Script script, ESLogger logger) {
             this(script, null, logger);
         }

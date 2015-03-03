@@ -34,6 +34,7 @@ import org.elasticsearch.script.ScriptParameterParser;
 import org.elasticsearch.script.ScriptParameterParser.ScriptParameterValue;
 import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.script.SearchScript;
+import org.elasticsearch.script.groovy.GroovyScriptEngineService;
 import org.elasticsearch.search.lookup.SearchLookup;
 
 import java.io.IOException;
@@ -169,9 +170,13 @@ public class ScriptFilterParser implements FilterParser {
 
         @Override
         public DocIdSet getDocIdSet(AtomicReaderContext context, Bits acceptDocs) throws IOException {
-            searchScript.setNextReader(context);
+            SearchScript myScript = searchScript;
+            if (myScript instanceof GroovyScriptEngineService.GroovyScript) {
+                myScript = ((GroovyScriptEngineService.GroovyScript) myScript).createNewInstance();
+            }
+            myScript.setNextReader(context);
             // LUCENE 4 UPGRADE: we can simply wrap this here since it is not cacheable and if we are not top level we will get a null passed anyway 
-            return BitsFilteredDocIdSet.wrap(new ScriptDocSet(context.reader().maxDoc(), acceptDocs, searchScript), acceptDocs);
+            return BitsFilteredDocIdSet.wrap(new ScriptDocSet(context.reader().maxDoc(), acceptDocs, myScript), acceptDocs);
         }
 
         static class ScriptDocSet extends MatchDocIdSet {

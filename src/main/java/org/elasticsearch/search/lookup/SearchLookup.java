@@ -41,7 +41,14 @@ public class SearchLookup {
     
     final ImmutableMap<String, Object> asMap;
 
+    final String[] types;
+
+    public SearchLookup createNewInstance() {
+        return new SearchLookup(docMap.mapperService(), docMap.fieldDataService(), types);
+    }
+
     public SearchLookup(MapperService mapperService, IndexFieldDataService fieldDataService, @Nullable String[] types) {
+        this.types = types;
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
         docMap = new DocLookup(mapperService, fieldDataService, types);
         sourceLookup = new SourceLookup();
